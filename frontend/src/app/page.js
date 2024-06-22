@@ -12,7 +12,7 @@ export default function Home() {
           <div className="flex text-3xl font-normal items-end text-[var(--secondary-color)]">
             while you
           </div>{" "}
-          <div className="text-6xl text-[var(--secondary-color)]">Stand Up</div>
+          <div className="text-6xl text-[var(--secondary-color)]">Real-Time Results</div>
         </div>
         <button className="mt-4 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center">
           Start Interview

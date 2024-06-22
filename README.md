@@ -1,6 +1,5 @@
 To run backend, go to src/:
 
-
 `python -m venv venv`
 
 `source venv/bin/activate`

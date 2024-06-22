@@ -7,10 +7,9 @@ export default function Home() {
   return (
     <main>
       <div className="flex flex-col gap-6 font-semibold absolute top-[37vh] left-[10vw]">
-        <div className="text-[var(--primary-color)] text-6xl">Lie Down</div>
+        <div className="text-[var(--primary-color)] text-6xl">AI Powered Insights</div>
         <div className="flex flex-row gap-4">
           <div className="flex text-3xl font-normal items-end text-[var(--secondary-color)]">
-            while you
           </div>{" "}
           <div className="text-6xl text-[var(--secondary-color)]">Real-Time Results</div>
         </div>

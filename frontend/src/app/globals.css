@@ -35,3 +35,24 @@ textarea {
   scrollbar-width: none;
   /* Firefox */
 }
+
+button:active {
+  outline: none;
+}
+
+.questions-background {
+  background: radial-gradient(circle at top right, #00d1b2, #00796b 7%, #004d40 15%, #000000 35%);
+}
+
+.messages::-webkit-scrollbar {
+  display: none;
+}
+
+.messages {
+  overflow-y: scroll;
+  /* Add the ability to scroll */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

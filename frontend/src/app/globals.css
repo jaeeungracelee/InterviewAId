@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+  --background-rgb: 255, 255, 255;
+  --primary-color: #00d1b2;
+  --secondary-color: #95efe1;
+}
+
+body, main {
+  color: rgb(var(--background-rgb));
+  background: radial-gradient(circle at top right, #00d1b2, #00796b 15%, #004d40 30%, #000000 75%);
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+textarea {
+  resize: none !important;
+  outline: none;
+}
+
+textarea::-webkit-scrollbar {
+  display: none;
+}
+
+textarea {
+  overflow-y: scroll;
+  /* Add the ability to scroll */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

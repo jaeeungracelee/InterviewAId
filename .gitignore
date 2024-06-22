@@ -1,6 +1,13 @@
 .DS_Store
 /backend/venv
 /backend/__pycache__
+<<<<<<< HEAD
 /backend/.env
+=======
+<<<<<<< HEAD
+/backend/.env
+=======
+>>>>>>> ff046e9b99c4c6efbce787ee677c3daffeb3d29f
 /frontend/node_modules
 /node_modules
+>>>>>>> 71caf4101a30f893ee3507cbe6eaaee7eaee4bbe

@@ -26,9 +26,11 @@ import tempfile
 import boto3
 from hume import HumeBatchClient, BatchJob
 from hume.models.config import FaceConfig
+from queue import Queue
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 top_level_dict = {}
+top_level_queue = Queue()
 
 load_dotenv()
 
@@ -218,6 +220,8 @@ async def voice_message(sid, data):
     print("Transcription: ", result["text"])
     await sio.emit("voice_response", result["text"], room=sid)
 
+async def text_runner():
+    return
 
 if __name__ == "__main__":
     import uvicorn

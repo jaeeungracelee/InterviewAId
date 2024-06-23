@@ -1,9 +1,7 @@
 "use client";
 
+import { socket } from "@/lib/socket";
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
-
-const socket = io("http://localhost:8000", { path: "/socket.io" });
 
 const VoiceCommunication = () => {
   const [recording, setRecording] = useState(false);

@@ -28,6 +28,8 @@ from hume import HumeBatchClient
 from hume.models.config import FaceConfig
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 
+top_level_dict = {}
+
 load_dotenv()
 
 app = FastAPI()
@@ -40,8 +42,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
-app_sio = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path='/socket.io')
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+app_sio = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="/socket.io")
 
 whisper_model = whisper.load_model("base.en")
 
@@ -55,12 +57,13 @@ memory = ConversationBufferWindowMemory(
 )
 
 s3_client = boto3.client(
-    's3',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_REGION')
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION"),
 )
-bucket_name = os.getenv('AWS_BUCKET_NAME')
+bucket_name = os.getenv("AWS_BUCKET_NAME")
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -68,7 +71,7 @@ async def websocket_endpoint(websocket: WebSocket):
     while True:
         try:
             data = await websocket.receive_bytes()
-            
+
             with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_webm:
                 temp_webm.write(data)
                 temp_webm_path = temp_webm.name
@@ -88,7 +91,7 @@ async def websocket_endpoint(websocket: WebSocket):
             result = job.get_status()
 
             await websocket.send_text(str(result))
-        
+
         except WebSocketDisconnect:
             print("WebSocket disconnected")
             break
@@ -96,6 +99,7 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"Error during processing: {e}")
             if websocket.application_state == WebSocketState.CONNECTED:
                 await websocket.send_text(f"Error during processing: {e}")
+
 
 @app.post("/interview-information/")
 async def interview_information(request: Request):
@@ -106,11 +110,13 @@ async def interview_information(request: Request):
     context["description"] = data.get("description")
     return {"message": "Information received"}
 
+
 @app.get("/feedback/")
 async def feedback(request: Request):
     data = await request.json()
     feedback = data.get("feedback")
     return {"message": "Feedback received"}
+
 
 @app.get("/text-to-speech/")
 async def text_to_speech(request: Request):
@@ -118,7 +124,11 @@ async def text_to_speech(request: Request):
     text = data.get("text")
 
     url = "https://api.lmnt.com/v1/ai/speech"
-    querystring = {"X-API-Key": os.environ.get("LMNT_API_KEY"), "voice": "curtis", "text": text}
+    querystring = {
+        "X-API-Key": os.environ.get("LMNT_API_KEY"),
+        "voice": "curtis",
+        "text": text,
+    }
 
     response = requests.request("GET", url, params=querystring)
     audio_data = response.content
@@ -176,13 +186,19 @@ async def create_chat_completion(request: Request):
 async def connect(sid, environ):
     print(f"Client connected: {sid}")
 
+
 @sio.event
 async def disconnect(sid):
     print(f"Client disconnected: {sid}")
 
+
 @sio.event
 async def voice_message(sid, data):
+    if sid not in top_level_dict:
+        top_level_dict[sid] = {}
     if data == "stop":
+        print("------ STOP ------")
+        print(top_level_dict[sid]["current_line"])
         return
 
     # Decode base64 data and transcribe
@@ -194,19 +210,17 @@ async def voice_message(sid, data):
     with open(filepath, "wb") as f:
         f.write(audio_bytes)
 
-    # remainder = len(audio_bytes) % 2
-
-    # beginning = audio_bytes[0:len(audio_bytes)-remainder]
-    # leftover = audio_bytes[len(audio_bytes)-remainder:]
-    
-    # audio_signal = np.frombuffer(beginning, np.int16).flatten().astype(np.float32) / 32768.0
-
-    # audio_signal, sr = librosa.load(BytesIO(audio_bytes), sr=None)
     result = whisper_model.transcribe(filepath)
 
+    if "current_line" not in top_level_dict[sid]:
+        top_level_dict[sid]["current_line"] = ""
+    top_level_dict[sid]["current_line"] += result["text"]
+
     print("Transcription: ", result["text"])
-    await sio.emit('voice_response', result["text"], room=sid)
+    await sio.emit("voice_response", result["text"], room=sid)
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app_sio, host="0.0.0.0", port=8000)

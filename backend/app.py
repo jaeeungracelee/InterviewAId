@@ -24,7 +24,7 @@ from langchain.prompts import PromptTemplate
 
 import tempfile
 import boto3
-from hume import HumeBatchClient
+from hume import HumeBatchClient, BatchJob
 from hume.models.config import FaceConfig
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 
@@ -86,11 +86,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
             client = HumeBatchClient(os.getenv("HUME_API_KEY"))
             config = FaceConfig()
-            job = client.submit_job([s3_url], [config])
+            job: BatchJob = client.submit_job([s3_url], [config])
             job.await_complete()
-            result = job.get_status()
-
-            await websocket.send_text(str(result))
+            result = job.get_predictions()
+            print(result)
 
         except WebSocketDisconnect:
             print("WebSocket disconnected")

@@ -51,6 +51,7 @@ whisper_model = whisper.load_model("base.en")
 
 # Groq model
 context = {}
+cur_speech = ""
 model = "llama3-8b-8192"
 client = ChatGroq(api_key=os.environ.get("GROQ_API_KEY"), model_name=model)
 conversational_memory_length = 5
@@ -141,7 +142,7 @@ async def text_to_speech(request: Request):
 @app.post("/groq/")
 async def create_chat_completion(request: Request):
     data = await request.json()
-    message = data.get("voice") + " " + data.get("code")
+    message = cur_speech + data.get("voice") + " " + data.get("code")
     pre_prompt = (
         f"Name: {context['name']}\n"
         f"Company: {context['company']}\n"
@@ -150,13 +151,6 @@ async def create_chat_completion(request: Request):
     )
     final_prompt = pre_prompt + "\n" + prompt
 
-    # messages = [{"role": "user", "content": final_prompt}]
-
-    # chat_completion = client.chat.completions.create(
-    #     messages=messages,
-    #     model="llama3-70b-8192"
-    # )
-    # return {"content": chat_completion.choices[0].message.content}
     chat_prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(content=final_prompt),
@@ -192,7 +186,8 @@ async def voice_message(sid, data):
         top_level_dict[sid] = {}
     if data == "stop":
         print("------ STOP ------")
-        print(top_level_dict[sid]["current_line"])
+        global cur_speech
+        cur_speech = top_level_dict[sid]["current_line"]
         return
 
     # Decode base64 data and transcribe

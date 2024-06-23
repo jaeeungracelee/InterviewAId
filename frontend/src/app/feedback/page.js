@@ -14,7 +14,7 @@ export default function FeedbackPage() {
     setTechRes(randomText);
   });
   return (
-    <div className="questions-background w-full h-screen">
+    <div className="feedback-background w-full h-screen">
       <div className="flex flex-col gap-6 p-10 h-screen w-3/5">
         <h1 className="text-3xl font-semibold text-[var(--primary-color)]">
           Results from your interview

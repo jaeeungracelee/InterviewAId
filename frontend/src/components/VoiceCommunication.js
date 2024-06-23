@@ -10,7 +10,7 @@ const VoiceCommunication = () => {
 
   useEffect(() => {
     socket.on("voice_response", (data) => {
-      console.log("Voice response:", data);
+      //console.log("Voice response:", data);
       // Handle the voice response (e.g., display text)
     });
 
@@ -33,7 +33,7 @@ const VoiceCommunication = () => {
         reader.onloadend = () => {
           const base64data = reader.result;
           socket.emit("voice_message", base64data);
-          console.log(reader.result);
+          //console.log(reader.result);
         };
         reader.readAsDataURL(audioBlob);
       };
@@ -59,7 +59,7 @@ const VoiceCommunication = () => {
     <div className="voice-communication">
       <button
         onClick={recording ? stopRecording : startRecording}
-        className={`py-3 px-5 rounded-full text-black font-semibold ${
+        className={`py-3 px-5 rounded-full text-black ${
           recording ? "bg-red-500" : "bg-[var(--primary-color)]"
         }`}
       >

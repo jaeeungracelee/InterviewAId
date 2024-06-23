@@ -45,6 +45,27 @@ export default function Questions() {
     }
   };
 
+  const submitInfo = () => {
+    fetch("http://localhost:8000/interview-information/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: answers[0],
+        company: answers[1],
+        job: answers[2],
+        description: answers[3],
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        router.push("/interview");
+      })
+      .catch((err) => console.error(err));
+  };
+
   const messageBottomRef = useRef(null);
   useEffect(() => {
     if (messageBottomRef.current) {
@@ -54,9 +75,10 @@ export default function Questions() {
   }, [answers]);
 
   useEffect(() => {
-    typing(questions[curIndex]);
+    if (curIndex < questions.length) {
+      typing(questions[curIndex]);
+    }
   }, []);
-
 
   return (
     <div className="w-full h-[100vh] questions-background">
@@ -111,13 +133,13 @@ export default function Questions() {
         </div>
       </div>
       {answers.length == questions.length && (
-        <Link
-          href="/interview"
+        <button
+          onClick={submitInfo}
           className="start-button absolute bottom-6 right-6 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center"
         >
           Start Interview
           <ArrowForwardIcon sx={{ color: "white", fontSize: 24 }} />
-        </Link>
+        </button>
       )}
     </div>
   );

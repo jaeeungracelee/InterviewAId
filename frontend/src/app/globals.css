@@ -11,7 +11,7 @@
 
 body {
   color: rgb(var(--background-rgb));
-  background: radial-gradient(circle at top right, #00d1b2, #00796b 15%, #004d40 30%, #000000 75%);
+  background-color: black;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
@@ -28,6 +28,15 @@ body {
   position: absolute;
   width: 100%;
   height: 100%;
+}
+
+.home-background {
+  background: radial-gradient(circle at top right, #00d1b2, #00796b 15%, #004d40 30%, transparent 75%);
+}
+
+.feedback-background {
+  background: radial-gradient(circle at top right, #00d1b2, #00796b 15%, #004d40 30%, black 75%);
+
 }
 
 .btn {

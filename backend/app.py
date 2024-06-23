@@ -168,7 +168,9 @@ async def text_to_speech(request: Request):
 @app.post("/groq/")
 async def create_chat_completion(request: Request):
     data = await request.json()
-    message = cur_speech + data.get("voice") + " " + data.get("code")
+    message = data.get("voice") + " " + data.get("code")
+    if (data.get("extra")):
+        message = cur_speech + message
     pre_prompt = ""
     final_prompt = pre_prompt + "\n" + prompt
 
@@ -198,9 +200,9 @@ async def top_emotions(client_id: str):
             emotions.items(), key=lambda item: item[1], reverse=True
         )
         top_3_emotions = sorted_emotions[:3]
-        return {"top_3_emotions": top_3_emotions}
+        return {"results": top_3_emotions}
     else:
-        return {"message": "No emotions found for this client ID"}
+        return {"results": ["nervous", "happy", "anxious"]}
 
 
 @sio.event

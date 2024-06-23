@@ -9,7 +9,7 @@ export default function FeedbackPage() {
     "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like). Limit the number of sentences in the feedback to 5 sentences.";
   const [behaviorRes, setBehaviorRes] = useState("");
   const [techRes, setTechRes] = useState("");
-  const [feelingRes, setFeelingRes] = useState("");
+  const [feelingRes, setFeelingRes] = useState([]);
   useEffect(() => {
     fetch("http://localhost:8000/groq/", {
       method: "POST",
@@ -21,6 +21,7 @@ export default function FeedbackPage() {
         voice:
           "This is the end of the interview. Could you give me constructive feedback on the technical portion of my interview? Do not mention my explanation of the solution or how I spoke. Just focus on how well my code runs in terms of functionality and efficiency. Limit the feedback to five sentences.",
         code: "",
+        extra: false
       }),
     })
       .then((response) => response.json())
@@ -40,6 +41,7 @@ export default function FeedbackPage() {
         voice:
           "This is the end of the interview. Could you give me constructive feedback on how well I articulated my code? Do not mention the quality of my code. Rather, focus on how I communicated my thoughts and ideas.",
         code: "",
+        extra: false
       }),
     })
       .then((response) => response.json())
@@ -49,7 +51,34 @@ export default function FeedbackPage() {
       .catch((error) => {
         console.error(error);
       });
-    
+    fetch("http://localhost:8000/top-emotions/", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(response => response.json()).then(data => {
+
+      const top_emotion = data.results[0];
+      const voiceStr = "Please provide me with some feedback given that I felt" + top_emotion + "during the interview. Limit it in one second"
+      fetch("http://localhost:8000/groq/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify({
+        voice: voiceStr,
+        code: "",
+        extra: false
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setFeelingRes(data.content);
+      })
+      .catch((error) => {
+        console.error(error);
+      })}); 
   }, []);
 
   

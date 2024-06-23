@@ -95,6 +95,7 @@ const InterviewPage = () => {
       body: JSON.stringify({
         voice: "Here is my code:",
         code: codeInfo,
+        extra: true
       }),
     })
       .then((response) => response.json())

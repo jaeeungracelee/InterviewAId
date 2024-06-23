@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 
-import Image from "next/image";
-import HomeIcon from "@mui/icons-material/Home";
 import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
@@ -113,7 +111,7 @@ export default function Questions() {
       </div>
       {answers.length == questions.length && (
         <Link
-          href="/"
+          href="/interview"
           className="start-button absolute bottom-6 right-6 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center"
         >
           Start Interview

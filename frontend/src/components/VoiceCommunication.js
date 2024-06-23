@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:8000');
+const socket = io('http://localhost:8000', { path: '/socket.io' });
 
 const VoiceCommunication = () => {
   const [recording, setRecording] = useState(false);
@@ -11,7 +11,7 @@ const VoiceCommunication = () => {
   useEffect(() => {
     socket.on('voice_response', (data) => {
       console.log('Voice response:', data);
-      // the voice response (e.g., play audio, display text)
+      // Handle the voice response (e.g., display text)
     });
 
     return () => {
@@ -32,7 +32,7 @@ const VoiceCommunication = () => {
           };
           reader.readAsDataURL(audioBlob);
         };
-        mediaRecorder.start(1000); // send data every second???? IDK
+        mediaRecorder.start(1000); // send data every second
         setRecording(true);
 
         mediaRecorder.onstop = () => {
@@ -45,7 +45,7 @@ const VoiceCommunication = () => {
   };
 
   const stopRecording = () => {
-    // stop recording and streaming
+    // Stop the MediaRecorder and streaming
     setRecording(false);
     socket.emit('voice_message', 'stop');
   };

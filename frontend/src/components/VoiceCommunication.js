@@ -1,28 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
-import { createWavFile } from "./createWaveFile";
 
 const socket = io("http://localhost:8000", { path: "/socket.io" });
 
 const VoiceCommunication = () => {
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [socket, setSocket] = useState(null);
+  const recorderIntervalId = useRef(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:8000", { path: "/socket.io" });
-    setSocket(newSocket);
-
-    newSocket.on("voice_response", (data) => {
+    socket.on("voice_response", (data) => {
       console.log("Voice response:", data);
       // Handle the voice response (e.g., display text)
     });
 
     return () => {
-      newSocket.off("voice_response");
-      newSocket.disconnect();
+      socket.off("voice_response");
+      socket.disconnect();
     };
   }, []);
 
@@ -31,22 +27,6 @@ const VoiceCommunication = () => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // const audioContext = new AudioContext();
-      // await audioContext.audioWorklet.addModule("processor.js");
-
-      // const source = audioContext.createMediaStreamSource(stream);
-      // const node = new AudioWorkletNode(audioContext, "audio-processor");
-
-      // node.port.onmessage = (event) => {
-      //   const audioBuffer = event.data;
-      //   const wavFile = createWavFile(audioBuffer, audioContext.sampleRate);
-      //   console.log(wavFile)
-      //   socket.emit("voice_message", wavFile);
-      // };
-
-      // source.connect(node);
-      // node.connect(audioContext.destination);
 
       const mediaRecorder = new MediaRecorder(stream, {
         // mimeType: "audio/webm",
@@ -62,17 +42,14 @@ const VoiceCommunication = () => {
         };
         reader.readAsDataURL(audioBlob);
       };
-      setInterval(() => {
+      recorderIntervalId.current = setInterval(() => {
         mediaRecorder.stop();
-        console.log("restart")
         mediaRecorder.start();
       }, 5000);
       mediaRecorder.start(); // send data every second
       setRecording(true);
 
-      mediaRecorder.onstop = () => {
-        setRecording(false);
-      };
+      setMediaRecorder(mediaRecorder);
     } catch (err) {
       console.error("Error accessing microphone: ", err);
     }
@@ -82,11 +59,10 @@ const VoiceCommunication = () => {
     if (mediaRecorder) {
       mediaRecorder.stop();
       setMediaRecorder(null);
+      clearInterval(recorderIntervalId.current);
     }
     setRecording(false);
-    if (socket) {
-      socket.emit("voice_message", "stop");
-    }
+    socket.emit("voice_message", "stop");
   };
 
   return (
@@ -97,7 +73,7 @@ const VoiceCommunication = () => {
           recording ? "bg-red-500" : "bg-[var(--primary-color)]"
         }`}
       >
-        {recording ? "Stop" : "Start"}
+        {recording ? "Stop Talking" : "Start Talking"}
       </button>
     </div>
   );

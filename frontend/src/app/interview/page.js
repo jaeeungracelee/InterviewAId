@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 import VideoFeed from "../../components/VideoFeed";
@@ -15,7 +15,7 @@ const InterviewPage = () => {
   const startRecording = () => {
     setRecording(true);
   };
-  
+
   const stopRecording = () => {
     setRecording(false);
     // stop and handle recording
@@ -29,10 +29,10 @@ const InterviewPage = () => {
 
   const submitCode = async (code) => {
     try {
-      const response = await fetch('/api/submit-code', {
-        method: 'POST',
+      const response = await fetch("/api/submit-code", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ code }),
       });
@@ -42,7 +42,7 @@ const InterviewPage = () => {
       console.error("Error submitting code:", error);
     }
   };
-  
+
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full">
       <Head>
@@ -51,13 +51,13 @@ const InterviewPage = () => {
       </Head>
 
       <div className="flex flex-row w-full h-[70vh] max-w-[90%] mb-6 gap-4">
-      <div className="w-full"> 
-        <VideoFeed />
+        <div className="w-full">
+          <VideoFeed />
+        </div>
+        <div className="w-3/5">
+          <CodeEditor onSubmit={submitCode} />
+        </div>
       </div>
-      <div className="w-3/5"> 
-        <CodeEditor onSubmit={submitCode} />
-        </div>
-        </div>
       <VoiceCommunication />
       <Controls
         recording={recording}
@@ -68,6 +68,5 @@ const InterviewPage = () => {
     </div>
   );
 };
-
 
 export default InterviewPage;

@@ -79,7 +79,7 @@ export default function Questions() {
               <div className="section flex flex-col gap-3">
                 <div className="flex flex-col gap-2">
                   <div className="font-semibold text-[var(--primary-color)]">
-                    Engine:
+                    Aiden:
                   </div>
                   <div className="text-white rounded-lg">{q}</div>
                 </div>
@@ -96,7 +96,7 @@ export default function Questions() {
           {isTyping && (
             <div className="section flex flex-col gap-2">
               <div className="font-semibold text-[var(--primary-color)]">
-                Engine:
+                Aiden:
               </div>
               <div className="text-white rounded-lg">{curTyping}</div>
             </div>

@@ -10,9 +10,45 @@ export default function FeedbackPage() {
   const [behaviorRes, setBehaviorRes] = useState("");
   const [techRes, setTechRes] = useState("");
   useEffect(() => {
-    setBehaviorRes(randomText);
-    setTechRes(randomText);
-  });
+    fetch("http://localhost:8000/groq/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify({
+        voice:
+          "This is the end of the interview. Could you give me constructive feedback on the technical portion of my interview? Do not mention my explanation of the solution or how I spoke. Just focus on how well my code runs in terms of functionality and efficiency.",
+        code: "",
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTechRes(data.content);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    fetch("http://localhost:8000/groq/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify({
+        voice:
+          "This is the end of the interview. Could you give me constructive feedback on how well I articulated my code? Do not mention the quality of my code. Rather, focus on how I communicated my thoughts and ideas.",
+        code: "",
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setBehaviorRes(data.content);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
   return (
     <div className="feedback-background w-full h-screen">
       <div className="flex flex-col gap-6 p-10 h-screen w-3/5">

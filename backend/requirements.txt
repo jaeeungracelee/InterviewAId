@@ -7,5 +7,8 @@ python-dotenv
 groq
 pyaudio
 numpy~=1.26.4
+librosa
 boto3
+langchain
+langchain_groq
 hume

@@ -2,7 +2,7 @@ fastapi
 uvicorn
 python-socketio
 requests
-whisper
+openai-whisper
 python-dotenv
-pyaudio
 numpy
+groq

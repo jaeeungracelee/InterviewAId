@@ -2,13 +2,13 @@ import os
 import base64
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from io import BytesIO
+from groq import Groq
 import whisper
-from stt import listen, transcribe_audio
 
 # Load environment variables
 load_dotenv()
@@ -59,6 +59,23 @@ async def text_to_speech(request: Request):
     audio_stream = BytesIO(audio_data)
 
     return StreamingResponse(audio_stream, media_type="audio/wav")
+
+@app.post("/groq/")
+async def create_chat_completion(request: Request):
+    data = await request.json()
+    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    input_text = data.get("input_text")
+
+    pre_prompt = ""
+    prompt = pre_prompt + input_text
+
+    messages = [{"role": "user", "content": prompt}]
+    
+    chat_completion = client.chat.completions.create(
+        messages=messages,
+        model="llama3-70b-8192"
+    )
+    return {"content": chat_completion.choices[0].message.content}
 
 @sio.event
 async def connect(sid, environ):

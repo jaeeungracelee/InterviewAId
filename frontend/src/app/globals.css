@@ -16,21 +16,18 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
-  z-index: -4;
 }
 
 #tsparticles {
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: -1;
 }
 
 #particles-js {
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: -1; 
 }
 
 .btn {
@@ -76,7 +73,8 @@ button:active {
 }
 
 .questions-background {
-  background: radial-gradient(circle at top right, #00d1b2, #00796b 7%, #004d40 15%, #000000 35%);
+  background: radial-gradient(circle at top right, #00d1b2, #00796b 7%, #004d40 15%, transparent 35%);
+
 }
 
 .messages::-webkit-scrollbar {

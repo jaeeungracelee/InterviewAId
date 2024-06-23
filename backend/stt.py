@@ -3,23 +3,19 @@ import pyaudio
 import numpy as np
 import whisper
 
-# Parameters
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
-CHUNK = 1024  # smaller chunks
-BUFFER_SECONDS = 3  # compile every 3 seconds
+CHUNK = 1024
+BUFFER_SECONDS = 3
 BUFFER_SIZE = RATE * BUFFER_SECONDS
 
-# PyAudio
 audio = pyaudio.PyAudio()
 
-# Stream
 stream = audio.open(
     format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
 )
 
-# Whisper model
 model = whisper.load_model("base.en")
 
 
@@ -33,23 +29,20 @@ async def capture_audio(buffer, buffer_ptr, buffer_full):
 
         audio_chunk = np.frombuffer(data, np.int16).astype(np.float32) / 32768.0
 
-        # new chunk to the buffer using a sliding window approach
-        end_ptr = buffer_ptr + CHUNK
+        end_ptr = buffer_ptr[0] + CHUNK
         if end_ptr < BUFFER_SIZE:
-            buffer[buffer_ptr:end_ptr] = audio_chunk
+            buffer[buffer_ptr[0]:end_ptr] = audio_chunk
         else:
-            # wrap-around case
-            part1_size = BUFFER_SIZE - buffer_ptr
-            buffer[buffer_ptr:BUFFER_SIZE] = audio_chunk[:part1_size]
+            part1_size = BUFFER_SIZE - buffer_ptr[0]
+            buffer[buffer_ptr[0]:BUFFER_SIZE] = audio_chunk[:part1_size]
             buffer[0 : end_ptr % BUFFER_SIZE] = audio_chunk[part1_size:]
 
-        # if buffer is full
         if end_ptr >= BUFFER_SIZE:
             buffer_full.set()
 
-        buffer_ptr = end_ptr % BUFFER_SIZE
+        buffer_ptr[0] = end_ptr % BUFFER_SIZE
 
-        await asyncio.sleep(0.01)  # delay to allow other tasks to run
+        await asyncio.sleep(0.01)
 
 
 async def transcribe_audio(buffer, buffer_full, silence_event):
@@ -57,8 +50,8 @@ async def transcribe_audio(buffer, buffer_full, silence_event):
     transcriptions = []
 
     while True:
-        await buffer_full.wait()  # if buffer isn't full
-        buffer_full.clear()  # clear the event for next trigger
+        await buffer_full.wait()
+        buffer_full.clear()
 
         print("Transcribing...")
         try:
@@ -86,9 +79,8 @@ async def main(buffer, buffer_ptr, buffer_full, silence_event):
 def listen():
     print("Listening...")
 
-    # buffer to store audio data
     buffer = np.zeros(BUFFER_SIZE, dtype=np.float32)
-    buffer_ptr = 0
+    buffer_ptr = [0]
     buffer_full = asyncio.Event()
     silence_event = asyncio.Event()
 
@@ -102,3 +94,6 @@ def listen():
         stream.stop_stream()
         stream.close()
         audio.terminate()
+
+if __name__ == "__main__":
+    listen()

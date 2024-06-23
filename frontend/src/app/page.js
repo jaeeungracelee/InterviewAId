@@ -3,6 +3,8 @@ import SearchBar from "@/components/SearchBar";
 import Image from "next/image";
 import Link from "next/link";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import React from 'react'
+import VideoFeed from './../components/VideoFeed';
 
 export default function Home() {
   return (
@@ -23,6 +25,8 @@ export default function Home() {
           Start Interview
           <ArrowForwardIcon sx={{ color: "black", fontSize: 24 }} />
         </Link>
+            <div className="App">
+        </div>
       </div>
     </main>
   );

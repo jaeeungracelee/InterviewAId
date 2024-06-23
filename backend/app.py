@@ -2,23 +2,23 @@ import os
 import base64
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from io import BytesIO
-from groq import Groq
 import whisper
 from datetime import datetime
-# from stt import listen, transcribe_audio
+import tempfile
+import boto3
+from hume import HumeBatchClient
+from hume.models.config import FaceConfig
+from starlette.websockets import WebSocketDisconnect, WebSocketState
 
-# Load environment variables
 load_dotenv()
 
-# FastAPI app
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,12 +27,53 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Socket.IO server
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 app_sio = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path='/socket.io')
 
-# Whisper model
 model = whisper.load_model("base.en")
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_REGION')
+)
+bucket_name = os.getenv('AWS_BUCKET_NAME')
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        try:
+            data = await websocket.receive_bytes()
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_webm:
+                temp_webm.write(data)
+                temp_webm_path = temp_webm.name
+
+            print(f"Temporary WebM file saved at: {temp_webm_path}")
+
+            s3_file_key = f"videos/{os.path.basename(temp_webm_path)}"
+            s3_client.upload_file(temp_webm_path, bucket_name, s3_file_key)
+            s3_url = f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{s3_file_key}"
+
+            print(f"File uploaded to S3: {s3_url}")
+
+            client = HumeBatchClient(os.getenv("HUME_API_KEY"))
+            config = FaceConfig()
+            job = client.submit_job([s3_url], [config])
+            job.await_complete()
+            result = job.get_status()
+
+            await websocket.send_text(str(result))
+        
+        except WebSocketDisconnect:
+            print("WebSocket disconnected")
+            break
+        except Exception as e:
+            print(f"Error during processing: {e}")
+            if websocket.application_state == WebSocketState.CONNECTED:
+                await websocket.send_text(f"Error during processing: {e}")
 
 @app.post("/interview-information/")
 async def interview_information(request: Request):
@@ -93,7 +134,6 @@ async def voice_message(sid, data):
     if data == "stop":
         return
 
-    # Decode base64 data and transcribe
     audio_data = data.split(",")[1]
     audio_bytes = base64.b64decode(audio_data)
 
@@ -102,16 +142,7 @@ async def voice_message(sid, data):
     with open(filepath, "wb") as f:
         f.write(audio_bytes)
 
-    # remainder = len(audio_bytes) % 2
-
-    # beginning = audio_bytes[0:len(audio_bytes)-remainder]
-    # leftover = audio_bytes[len(audio_bytes)-remainder:]
-    
-    # audio_signal = np.frombuffer(beginning, np.int16).flatten().astype(np.float32) / 32768.0
-
-    # audio_signal, sr = librosa.load(BytesIO(audio_bytes), sr=None)
     result = model.transcribe(filepath)
-
 
     print("Transcription: ", result["text"])
     await sio.emit('voice_response', result["text"], room=sid)

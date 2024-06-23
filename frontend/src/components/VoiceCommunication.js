@@ -3,31 +3,37 @@
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000", { path: "/socket.io" });
-
 const VoiceCommunication = () => {
   const [recording, setRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    socket.on("voice_response", (data) => {
+    const newSocket = io("http://localhost:8000", { path: "/socket.io" });
+    setSocket(newSocket);
+
+    newSocket.on("voice_response", (data) => {
       console.log("Voice response:", data);
       // Handle the voice response (e.g., display text)
     });
 
     return () => {
-      socket.off("voice_response");
+      newSocket.off("voice_response");
+      newSocket.disconnect();
     };
   }, []);
 
   const startRecording = async () => {
+    if (!socket) return;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const mediaRecorder = new MediaRecorder(stream, {
+      const newMediaRecorder = new MediaRecorder(stream, {
         mimeType: "audio/webm",
       });
 
-      mediaRecorder.ondataavailable = (event) => {
+      newMediaRecorder.ondataavailable = (event) => {
         const audioBlob = event.data;
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -37,10 +43,12 @@ const VoiceCommunication = () => {
         };
         reader.readAsDataURL(audioBlob);
       };
-      mediaRecorder.start(5000); // send data every second
+
+      newMediaRecorder.start(5000); // send data every 5 seconds
+      setMediaRecorder(newMediaRecorder);
       setRecording(true);
 
-      mediaRecorder.onstop = () => {
+      newMediaRecorder.onstop = () => {
         setRecording(false);
       };
     } catch (err) {
@@ -49,10 +57,14 @@ const VoiceCommunication = () => {
   };
 
   const stopRecording = () => {
-    // Stop the MediaRecorder and streaming
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+    }
     setRecording(false);
-    socket.emit("voice_message", "stop");
-    socket.disconnect();
+    if (socket) {
+      socket.emit("voice_message", "stop");
+    }
   };
 
   return (

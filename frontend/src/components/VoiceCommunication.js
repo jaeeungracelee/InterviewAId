@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
+import { createWavFile } from "./createWaveFile";
+
+const socket = io("http://localhost:8000", { path: "/socket.io" });
 
 const VoiceCommunication = () => {
   const [recording, setRecording] = useState(false);
@@ -29,26 +32,45 @@ const VoiceCommunication = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const newMediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
+      // const audioContext = new AudioContext();
+      // await audioContext.audioWorklet.addModule("processor.js");
+
+      // const source = audioContext.createMediaStreamSource(stream);
+      // const node = new AudioWorkletNode(audioContext, "audio-processor");
+
+      // node.port.onmessage = (event) => {
+      //   const audioBuffer = event.data;
+      //   const wavFile = createWavFile(audioBuffer, audioContext.sampleRate);
+      //   console.log(wavFile)
+      //   socket.emit("voice_message", wavFile);
+      // };
+
+      // source.connect(node);
+      // node.connect(audioContext.destination);
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        // mimeType: "audio/webm",
       });
 
-      newMediaRecorder.ondataavailable = (event) => {
+      mediaRecorder.ondataavailable = (event) => {
         const audioBlob = event.data;
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64data = reader.result;
           socket.emit("voice_message", base64data);
-          //console.log(reader.result);
+          console.log(reader.result);
         };
         reader.readAsDataURL(audioBlob);
       };
-
-      newMediaRecorder.start(5000); // send data every 5 seconds
-      setMediaRecorder(newMediaRecorder);
+      setInterval(() => {
+        mediaRecorder.stop();
+        console.log("restart")
+        mediaRecorder.start();
+      }, 5000);
+      mediaRecorder.start(); // send data every second
       setRecording(true);
 
-      newMediaRecorder.onstop = () => {
+      mediaRecorder.onstop = () => {
         setRecording(false);
       };
     } catch (err) {

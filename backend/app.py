@@ -43,7 +43,7 @@ app.add_middleware(
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 app_sio = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path='/socket.io')
 
-model = whisper.load_model("base.en")
+whisper_model = whisper.load_model("base.en")
 
 # Groq model
 context = {}
@@ -73,7 +73,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 temp_webm.write(data)
                 temp_webm_path = temp_webm.name
 
-            print(f"Temporary WebM file saved at: {temp_webm_path}")
+            # print(f"Temporary WebM file saved at: {temp_webm_path}")
 
             s3_file_key = f"videos/{os.path.basename(temp_webm_path)}"
             s3_client.upload_file(temp_webm_path, bucket_name, s3_file_key)
@@ -182,19 +182,27 @@ async def disconnect(sid):
 
 @sio.event
 async def voice_message(sid, data):
-    print("Data received" + data.split(",")[0])
     if data == "stop":
         return
 
+    # Decode base64 data and transcribe
     audio_data = data.split(",")[1]
     audio_bytes = base64.b64decode(audio_data)
 
-    filepath = f"./test/{datetime.now().__str__()}.webm"
+    filepath = "./audio.ogg"
 
     with open(filepath, "wb") as f:
         f.write(audio_bytes)
 
-    result = model.transcribe(filepath)
+    # remainder = len(audio_bytes) % 2
+
+    # beginning = audio_bytes[0:len(audio_bytes)-remainder]
+    # leftover = audio_bytes[len(audio_bytes)-remainder:]
+    
+    # audio_signal = np.frombuffer(beginning, np.int16).flatten().astype(np.float32) / 32768.0
+
+    # audio_signal, sr = librosa.load(BytesIO(audio_bytes), sr=None)
+    result = whisper_model.transcribe(filepath)
 
     print("Transcription: ", result["text"])
     await sio.emit('voice_response', result["text"], room=sid)

@@ -1,6 +1,8 @@
-requests
 fastapi
-python-dotenv
 uvicorn
-openai-whisper
+python-socketio
+requests
+whisper
+python-dotenv
 pyaudio
+numpy

@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 :root {
   --background-rgb: 255, 255, 255;
@@ -11,11 +11,20 @@
 
 body {
   color: rgb(var(--background-rgb));
-  background: radial-gradient(circle at top right, #00d1b2, #00796b 15%, #004d40 30%, #000000 75%);
+  /* background: black; */
+  /* background: radial-gradient(
+    circle at top right,
+    transparent,
+    #00000031 15%,
+    #00000071 30%,
+    #000000ae 75%
+  ); */
+  background: radial-gradient(circle at top right, var(--primary-color), #00796b 15%, #004d40 30%, #000000 75%);
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
+  z-index: -4;
 }
 
 #tsparticles {
@@ -28,10 +37,34 @@ body {
   position: absolute;
   width: 100%;
   height: 100%;
+  z-index: -1;
+}
+/* 
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("../assets/landing_gradient.svg");
+  background-position: center;
+  animation: background-float 10s infinite ease-in-out;
 }
 
+@keyframes background-float {
+  0% {
+    transform: scale(100%);
+  }
+
+  50% {
+    transform: scale(110%);
+  }
+
+  100% {
+    transform: scale(100%);
+  }
+} */
+
 .btn {
-  @apply text-black rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row hover:opacity-80 active:opacity-60 transition-opacity duration-150
+  @apply text-black rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row hover:opacity-80 active:opacity-60 transition-opacity duration-150;
 }
 
 .video-feed {
@@ -47,7 +80,7 @@ body {
 }
 
 .font-poppins {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 textarea {
@@ -73,8 +106,13 @@ button:active {
 }
 
 .questions-background {
-  background: radial-gradient(circle at top right, #00d1b2, #00796b 7%, #004d40 15%, transparent 35%);
-
+  background: radial-gradient(
+    circle at top right,
+    #00d1b2,
+    #00796b 10%,
+    #004d40 20%,
+    #000000 45%
+  );
 }
 
 .messages::-webkit-scrollbar {

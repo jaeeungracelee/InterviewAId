@@ -2,3 +2,5 @@ requests
 fastapi
 python-dotenv
 uvicorn
+openai-whisper
+pyaudio

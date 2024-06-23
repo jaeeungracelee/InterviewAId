@@ -50,7 +50,12 @@ const VideoFeed = () => {
 
   return (
     <div className="video-feed bg-gray-900 flex items-center justify-center rounded-lg overflow-hidden shadow-lg w-full h-[50vh]">
-      <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        className="w-full h-full object-cover"
+      />
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );

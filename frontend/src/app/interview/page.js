@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 import VideoFeed from "../../components/VideoFeed";
@@ -12,6 +12,8 @@ import { socket } from "@/lib/socket";
 const InterviewPage = () => {
   const router = useRouter();
   const [recording, setRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const recorderIntervalId = useRef(null);
   const [generatingResponse, setGeneratingResponse] = useState(false);
   const [code, setCode] = useState("");
 
@@ -31,7 +33,7 @@ const InterviewPage = () => {
         reader.onloadend = () => {
           const base64data = reader.result;
           socket.emit("voice_message", base64data);
-          console.log(reader.result);
+          // console.log(reader.result);
         };
         reader.readAsDataURL(audioBlob);
       };
@@ -52,24 +54,7 @@ const InterviewPage = () => {
     socketRecording();
     setGeneratingResponse(true);
     setTimeout(() => {
-      fetch("http://localhost:8000/groq/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Credentials": true,
-        },
-        body: JSON.stringify({
-          voice: "",
-          code: code,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data.content);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      sendText("");
       setGeneratingResponse(false);
     }, 1000);
   };
@@ -84,24 +69,7 @@ const InterviewPage = () => {
     socketRecording();
     setGeneratingResponse(true);
     setTimeout(() => {
-      fetch("http://localhost:8000/groq/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Credentials": true,
-        },
-        body: JSON.stringify({
-          voice: "Here is my code:",
-          code: code,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data.content);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      sendText(code);
       setGeneratingResponse(false);
     }, 1000);
   };
@@ -116,6 +84,38 @@ const InterviewPage = () => {
     setRecording(false);
     socket.emit("voice_message", "stop");
   };
+
+  const sendText = (codeInfo) => {
+    fetch("http://localhost:8000/groq/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify({
+        voice: "Here is my code:",
+        code: codeInfo,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        fetch("http://localhost:8000/text-to-speech/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: data.content }),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log(data))
+          .catch((error) => console.error(error));
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  useEffect(() => {
+    sendText("");
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full">

@@ -135,7 +135,7 @@ export default function Questions() {
       {answers.length == questions.length && (
         <button
           onClick={submitInfo}
-          className="start-button text-black absolute bottom-6 right-6 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center"
+          className="start-button text-black absolute bottom-6 right-6 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[8px] items-center justify-center"
         >
           Start Interview
           <ArrowForwardIcon sx={{ color: "black", fontSize: 24 }} />

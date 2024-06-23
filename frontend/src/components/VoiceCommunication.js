@@ -5,8 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 const VoiceCommunication = ({ startRecording, stopRecording }) => {
   const [recording, setRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const recorderIntervalId = useRef(null);
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

@@ -7,9 +7,12 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from io import BytesIO
+from pydub import AudioSegment
+import simpleaudio as sa
 import whisper
 from datetime import datetime
 from model.prompt import prompt
+import wave, struct
 
 from langchain.chains import ConversationChain, LLMChain
 from langchain_core.prompts import (
@@ -92,7 +95,7 @@ async def websocket_endpoint(websocket: WebSocket):
             job: BatchJob = client.submit_job([s3_url], [config])
             job.await_complete()
             result = job.get_predictions()
-            print(result)
+            # print(result)
 
         except WebSocketDisconnect:
             print("WebSocket disconnected")
@@ -120,7 +123,7 @@ async def feedback(request: Request):
     return {"message": "Feedback received"}
 
 
-@app.get("/text-to-speech/")
+@app.post("/text-to-speech/")
 async def text_to_speech(request: Request):
     data = await request.json()
     text = data.get("text")
@@ -135,8 +138,20 @@ async def text_to_speech(request: Request):
     response = requests.request("GET", url, params=querystring)
     audio_data = response.content
     audio_stream = BytesIO(audio_data)
+    audio = AudioSegment.from_file(audio_stream, format="wav")
 
-    return StreamingResponse(audio_stream, media_type="audio/wav")
+    raw_audio_data = audio.raw_data
+
+    play_obj = sa.play_buffer(
+        raw_audio_data,
+        num_channels=audio.channels,
+        bytes_per_sample=audio.sample_width,
+        sample_rate=audio.frame_rate,
+    )
+
+    play_obj.wait_done()
+
+    return {"message": "success"}
 
 
 @app.post("/groq/")

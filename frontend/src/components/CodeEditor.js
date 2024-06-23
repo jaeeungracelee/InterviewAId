@@ -15,7 +15,7 @@ const CodeEditor = ({ onSubmit }) => {
       <CodeMirror
         value={code}
         theme="dark"
-        height="650px"
+        height="98%"
         onChange={(value) => setCode(value)}
         className="flex-1 rounded-lg"
       />

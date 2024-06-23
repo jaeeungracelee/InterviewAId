@@ -9,6 +9,8 @@ import socketio
 from io import BytesIO
 from groq import Groq
 import whisper
+from datetime import datetime
+# from stt import listen, transcribe_audio
 
 # Load environment variables
 load_dotenv()
@@ -87,13 +89,30 @@ async def disconnect(sid):
 
 @sio.event
 async def voice_message(sid, data):
+    print("Data received" + data.split(",")[0])
     if data == "stop":
         return
 
     # Decode base64 data and transcribe
     audio_data = data.split(",")[1]
     audio_bytes = base64.b64decode(audio_data)
-    result = model.transcribe(audio_bytes)
+
+    filepath = f"./test/{datetime.now().__str__()}.webm"
+
+    with open(filepath, "wb") as f:
+        f.write(audio_bytes)
+
+    # remainder = len(audio_bytes) % 2
+
+    # beginning = audio_bytes[0:len(audio_bytes)-remainder]
+    # leftover = audio_bytes[len(audio_bytes)-remainder:]
+    
+    # audio_signal = np.frombuffer(beginning, np.int16).flatten().astype(np.float32) / 32768.0
+
+    # audio_signal, sr = librosa.load(BytesIO(audio_bytes), sr=None)
+    result = model.transcribe(filepath)
+
+
     print("Transcription: ", result["text"])
     await sio.emit('voice_response', result["text"], room=sid)
 

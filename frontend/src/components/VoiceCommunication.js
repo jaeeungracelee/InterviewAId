@@ -1,53 +1,58 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import io from 'socket.io-client';
+import React, { useEffect, useState } from "react";
+import io from "socket.io-client";
 
-const socket = io('http://localhost:8000', { path: '/socket.io' });
+const socket = io("http://localhost:8000", { path: "/socket.io" });
 
 const VoiceCommunication = () => {
   const [recording, setRecording] = useState(false);
 
   useEffect(() => {
-    socket.on('voice_response', (data) => {
-      console.log('Voice response:', data);
+    socket.on("voice_response", (data) => {
+      console.log("Voice response:", data);
       // Handle the voice response (e.g., display text)
     });
 
     return () => {
-      socket.off('voice_response');
+      socket.off("voice_response");
     };
   }, []);
 
-  const startRecording = () => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = (event) => {
-          const audioBlob = event.data;
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64data = reader.result;
-            socket.emit('voice_message', base64data);
-          };
-          reader.readAsDataURL(audioBlob);
-        };
-        mediaRecorder.start(1000); // send data every second
-        setRecording(true);
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        mediaRecorder.onstop = () => {
-          setRecording(false);
-        };
-      })
-      .catch(err => {
-        console.error("Error accessing microphone: ", err);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
       });
+
+      mediaRecorder.ondataavailable = (event) => {
+        const audioBlob = event.data;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          socket.emit("voice_message", base64data);
+          console.log(reader.result);
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+      mediaRecorder.start(5000); // send data every second
+      setRecording(true);
+
+      mediaRecorder.onstop = () => {
+        setRecording(false);
+      };
+    } catch (err) {
+      console.error("Error accessing microphone: ", err);
+    }
   };
 
   const stopRecording = () => {
     // Stop the MediaRecorder and streaming
     setRecording(false);
-    socket.emit('voice_message', 'stop');
+    socket.emit("voice_message", "stop");
+    socket.disconnect();
   };
 
   return (

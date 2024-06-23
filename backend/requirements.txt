@@ -4,5 +4,7 @@ python-socketio
 requests
 openai-whisper
 python-dotenv
-numpy
 groq
+pyaudio
+numpy~=1.26.4
+librosa

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Mic, MicOff, CallEnd } from '@mui/icons-material';
 
 const Controls = ({ recording, onStart, onStop, onEnd }) => {

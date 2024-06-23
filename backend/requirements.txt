@@ -4,3 +4,5 @@ python-dotenv
 uvicorn
 openai-whisper
 pyaudio
+python-socketio
+python-dotenv

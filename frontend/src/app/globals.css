@@ -18,6 +18,22 @@ body, main {
   font-family: 'Poppins', sans-serif;
 }
 
+.video-feed {
+  @apply bg-gray-900 flex items-center justify-center rounded-lg overflow-hidden shadow-lg w-full h-full;
+}
+
+.controls button {
+  @apply py-2 px-4 rounded-full text-white flex items-center justify-center;
+}
+
+.controls .bg-black {
+  @apply hover:bg-gray-700;
+}
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
 textarea {
   resize: none !important;
   outline: none;

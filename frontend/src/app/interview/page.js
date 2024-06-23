@@ -99,6 +99,7 @@ const InterviewPage = () => {
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log(data)
         fetch("http://localhost:8000/text-to-speech/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -114,7 +115,7 @@ const InterviewPage = () => {
   };
 
   useEffect(() => {
-    sendText("");
+    sendText("Please introduce yourself and provide a question for the interview.");
   }, []);
 
   return (

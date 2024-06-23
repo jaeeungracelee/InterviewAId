@@ -13,6 +13,7 @@ import whisper
 from datetime import datetime
 from model.prompt import prompt
 import wave, struct
+from playsound import playsound
 
 from langchain.chains import ConversationChain, LLMChain
 from langchain_core.prompts import (
@@ -24,6 +25,7 @@ from langchain_core.messages import SystemMessage
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
+from lmnt.api import Speech
 
 import tempfile
 import boto3
@@ -34,6 +36,7 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 top_level_dict = {}
 top_level_queue = Queue()
+emotions_dict = {}
 
 load_dotenv()
 
@@ -95,7 +98,7 @@ async def websocket_endpoint(websocket: WebSocket):
             job: BatchJob = client.submit_job([s3_url], [config])
             job.await_complete()
             result = job.get_predictions()
-            # print(result)
+            print(result)
 
         except WebSocketDisconnect:
             print("WebSocket disconnected")
@@ -128,28 +131,36 @@ async def text_to_speech(request: Request):
     data = await request.json()
     text = data.get("text")
 
-    url = "https://api.lmnt.com/v1/ai/speech"
-    querystring = {
-        "X-API-Key": os.environ.get("LMNT_API_KEY"),
-        "voice": "curtis",
-        "text": text,
-    }
+    # url = "https://api.lmnt.com/v1/ai/speech"
+    # querystring = {
+    #     "X-API-Key": os.environ.get("LMNT_API_KEY"),
+    #     "voice": "curtis",
+    #     "text": text,
+    # }
 
-    response = requests.request("GET", url, params=querystring)
-    audio_data = response.content
-    audio_stream = BytesIO(audio_data)
-    audio = AudioSegment.from_file(audio_stream, format="wav")
+    # response = requests.request("GET", url, params=querystring)
+    # audio_data = response.content
+    # audio_stream = BytesIO(audio_data)
+    # audio = AudioSegment.from_file(audio_stream, format="wav")
 
-    raw_audio_data = audio.raw_data
+    # raw_audio_data = audio.raw_data
 
-    play_obj = sa.play_buffer(
-        raw_audio_data,
-        num_channels=audio.channels,
-        bytes_per_sample=audio.sample_width,
-        sample_rate=audio.frame_rate,
-    )
+    print(text)
+    async with Speech(os.environ.get("LMNT_API_KEY")) as speech:
+        synthesis = await speech.synthesize(text, "lily")
+    with open("test.mp3", "wb") as f:
+        f.write(synthesis["audio"])
+    
+    playsound("test.mp3")
 
-    play_obj.wait_done()
+    # play_obj = sa.play_buffer(
+    #     raw_audio_data,
+    #     num_channels=audio.channels,
+    #     bytes_per_sample=audio.sample_width,
+    #     sample_rate=audio.frame_rate,
+    # )
+
+    # play_obj.wait_done()
 
     return {"message": "success"}
 
@@ -158,12 +169,7 @@ async def text_to_speech(request: Request):
 async def create_chat_completion(request: Request):
     data = await request.json()
     message = cur_speech + data.get("voice") + " " + data.get("code")
-    pre_prompt = (
-        f"Name: {context['name']}\n"
-        f"Company: {context['company']}\n"
-        f"Job Title: {context['role']}\n"
-        f"Job Description: {context['description']}\n\n"
-    )
+    pre_prompt = ""
     final_prompt = pre_prompt + "\n" + prompt
 
     chat_prompt = ChatPromptTemplate.from_messages(
@@ -183,6 +189,18 @@ async def create_chat_completion(request: Request):
     print(message)
     response = conversation.predict(human_input=message)
     return {"content": response}
+
+@app.get("/top-emotions/")
+async def top_emotions(client_id: str):
+    if client_id in emotions_dict:
+        emotions = emotions_dict[client_id]
+        sorted_emotions = sorted(
+            emotions.items(), key=lambda item: item[1], reverse=True
+        )
+        top_3_emotions = sorted_emotions[:3]
+        return {"top_3_emotions": top_3_emotions}
+    else:
+        return {"message": "No emotions found for this client ID"}
 
 
 @sio.event

@@ -9,13 +9,17 @@
   --secondary-color: #95efe1;
 }
 
-body, main {
+body {
   color: rgb(var(--background-rgb));
   background: radial-gradient(circle at top right, #00d1b2, #00796b 15%, #004d40 30%, #000000 75%);
   width: 100vw;
   height: 100vh;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
+}
+
+.btn {
+  @apply text-black rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row hover:opacity-80 active:opacity-60 transition-opacity duration-150
 }
 
 .video-feed {

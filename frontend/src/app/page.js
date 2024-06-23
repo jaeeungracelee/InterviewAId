@@ -6,19 +6,19 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function Home() {
   return (
-    <main>
-      <div className="flex flex-col gap-6 font-semibold absolute top-[42vh] left-[10vw]">
-        <div className="text-[var(--secondary-color)] text-4xl">
-          Your Interview
-        </div>
-        <div className="flex flex-row gap-4">
-          <div className="text-6xl text-[var(--secondary-color)]">
-            Viewed by You
+    <main className="h-[100dvh] flex items-center">
+      <div className="flex flex-col gap-8 font-semibold mt-20 ml-36">
+        <div className="flex flex-col gap-2">
+          <div className="text-[var(--secondary-color)] text-4xl">
+            Practice with Confidence
+          </div>
+          <div className="text-8xl text-[var(--secondary-color)]">
+            InterviewAId
           </div>
         </div>
         <Link
           href="/questions"
-          className="text-black mt-4 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center"
+          className="btn"
         >
           Start Interview
           <ArrowForwardIcon sx={{ color: "black", fontSize: 24 }} />
@@ -27,4 +27,3 @@ export default function Home() {
     </main>
   );
 }
-

@@ -31,18 +31,18 @@ export default function FeedbackPage() {
           </div>
           <div className="text-sm">{behaviorRes}</div>
         </div>
-        <div className="flex flex-row gap-2 items-end">
+        <div className="flex flex-row gap-2 items-center">
           <Link
             href="/questions"
-            className="font-semibold mt-4 rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center text-black"
+            className="font-semibold rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center text-black"
           >
             Take Another Interview
             <ArrowForwardIcon sx={{ color: "black", fontSize: 24 }} />
           </Link>
-          <div className="text-xl">or</div>
+          <div className="text-lg ml-1">or</div>
           <Link
             href="/"
-            className="underline text-xl text-[var(--primary-color)]"
+            className="underline text-lg text-[var(--primary-color)]"
           >
             back to home
           </Link>

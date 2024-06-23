@@ -32,7 +32,7 @@ export default function SearchBar({ submitAnswer }) {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Enter your meeting link..."
+        placeholder="Write here..."
         onKeyDown={handleKeyDown}
         ref={textAreaRef}
         rows={1}

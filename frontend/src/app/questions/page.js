@@ -57,6 +57,7 @@ export default function Questions() {
     typing(questions[curIndex]);
   }, []);
 
+
   return (
     <div className="w-full h-[100vh] questions-background">
       <div className="w-[80%] h-[100vh] flex flex-col items-center">

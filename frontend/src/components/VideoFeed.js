@@ -43,7 +43,7 @@ const VideoFeed = () => {
           }
         }, 'video/webm');
       }
-    }, 1000); // Send every second
+    }, 10000); // Send every second
 
     return () => clearInterval(interval);
   }, []);

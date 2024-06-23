@@ -14,6 +14,7 @@ from datetime import datetime
 from model.prompt import prompt
 import wave, struct
 from playsound import playsound
+import pathlib
 
 from langchain.chains import ConversationChain, LLMChain
 from langchain_core.prompts import (
@@ -33,6 +34,11 @@ from hume import HumeBatchClient, BatchJob
 from hume.models.config import FaceConfig
 from queue import Queue
 from starlette.websockets import WebSocketDisconnect, WebSocketState
+from ipex_llm.transformers import AutoModelForSpeechSeq2Seq
+from transformers import WhisperProcessor
+
+import datasets
+import torch
 
 top_level_dict = {}
 top_level_queue = Queue()
@@ -54,6 +60,19 @@ sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 app_sio = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="/socket.io")
 
 whisper_model = whisper.load_model("base.en")
+model_path = "openai/whisper-base.en"
+
+whisper_model = AutoModelForSpeechSeq2Seq.from_pretrained(model_path,
+                                                    load_in_4bit=True,
+                                                    optimize_model=False,
+                                                    use_cache=True)
+whisper_model.to('cpu')
+whisper_model.config.forced_decoder_ids = None
+
+# Load Whisper processor
+processor = WhisperProcessor.from_pretrained(model_path)
+forced_decoder_ids = processor.get_decoder_prompt_ids(language="english", task="transcribe")
+
 
 # Groq model
 context = {}
@@ -91,7 +110,7 @@ async def websocket_endpoint(websocket: WebSocket):
             s3_client.upload_file(temp_webm_path, bucket_name, s3_file_key)
             s3_url = f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{s3_file_key}"
 
-            print(f"File uploaded to S3: {s3_url}")
+            # print(f"File uploaded to S3: {s3_url}")
 
             client = HumeBatchClient(os.getenv("HUME_API_KEY"))
             config = FaceConfig()
@@ -148,10 +167,12 @@ async def text_to_speech(request: Request):
     print(text)
     async with Speech(os.environ.get("LMNT_API_KEY")) as speech:
         synthesis = await speech.synthesize(text, "lily")
-    with open("test.mp3", "wb") as f:
+    current_path = pathlib.Path(__file__).parent.resolve()
+    path = pathlib.Path(current_path, "test.mp3")
+    with open(path, "wb") as f:
         f.write(synthesis["audio"])
     
-    playsound("test.mp3")
+    playsound(str(path))
 
     # play_obj = sa.play_buffer(
     #     raw_audio_data,
@@ -229,19 +250,31 @@ async def voice_message(sid, data):
     audio_data = data.split(",")[1]
     audio_bytes = base64.b64decode(audio_data)
 
-    filepath = "./audio.ogg"
+    filepath = "audio.ogg"
 
     with open(filepath, "wb") as f:
         f.write(audio_bytes)
 
-    result = whisper_model.transcribe(filepath)
+    os.system("ffmpeg -y -i audio.ogg -ar 16000 audio.wav")
+
+    audio_dataset = datasets.Dataset.from_dict({"audio": ["./audio.wav"]}).cast_column("audio", datasets.Audio())
+    with torch.inference_mode():
+        sample = audio_dataset[0]["audio"]
+        input_features = processor(sample["array"],
+                                   sampling_rate=sample["sampling_rate"],
+                                   return_tensors="pt").input_features.to('cpu')
+        predicted_ids = whisper_model.generate(input_features,
+                                       forced_decoder_ids=forced_decoder_ids)
+        result = processor.batch_decode(predicted_ids, skip_special_tokens=True)
+
+    # result = whisper_model.transcribe(str(filepath))
 
     if "current_line" not in top_level_dict[sid]:
         top_level_dict[sid]["current_line"] = ""
-    top_level_dict[sid]["current_line"] += result["text"]
+    top_level_dict[sid]["current_line"] += result[0]
 
-    print("Transcription: ", result["text"])
-    await sio.emit("voice_response", result["text"], room=sid)
+    print("Transcription: ", result[0])
+    await sio.emit("voice_response", result[0], room=sid)
 
 async def text_runner():
     return

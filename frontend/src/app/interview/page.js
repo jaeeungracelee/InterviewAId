@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from 'react';
-import Head from 'next/head';
-import VideoFeed from '../../components/VideoFeed';
-import Controls from '../../components/Controls';
-import VoiceCommunication from '../../components/VoiceCommunication';
+import { useRouter } from "next/navigation";
+import Head from "next/head";
+import VideoFeed from "../../components/VideoFeed";
+import Controls from "../../components/Controls";
+import VoiceCommunication from "../../components/VoiceCommunication";
 
 const InterviewPage = () => {
+  const router = useRouter();
   const [recording, setRecording] = useState(false);
 
   const startRecording = () => {
@@ -20,22 +22,27 @@ const InterviewPage = () => {
 
   const endCall = () => {
     // end the call
+    setRecording(false);
+    router.push("/feedback");
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-full">
+    <div className="flex flex-col items-center justify-center h-screen w-full">
       <Head>
         <title>InterviewAId - Interview</title>
         <meta name="description" content="AI Powered Interview Assistant" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <h1 className="text-4xl font-bold mb-6 text-white">Interview Session</h1>
-      <div className="w-full max-w-4xl mb-6">
+      <div className="w-full h-[70vh] max-w-4xl mb-6">
         <VideoFeed />
       </div>
       <VoiceCommunication />
-      <Controls recording={recording} onStart={startRecording} onStop={stopRecording} onEnd={endCall} />
+      <Controls
+        recording={recording}
+        onStart={startRecording}
+        onStop={stopRecording}
+        onEnd={endCall}
+      />
     </div>
   );
 };

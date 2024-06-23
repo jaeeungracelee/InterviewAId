@@ -54,9 +54,11 @@ const VoiceCommunication = () => {
     <div className="voice-communication">
       <button
         onClick={recording ? stopRecording : startRecording}
-        className={`py-2 px-4 rounded-full text-white ${recording ? 'bg-red-500' : 'bg-green-500'}`}
+        className={`py-3 px-5 rounded-full text-white font-semibold ${
+          recording ? "bg-red-500" : "bg-[var(--primary-color)]"
+        }`}
       >
-        {recording ? 'Stop' : 'Start'}
+        {recording ? "Stop" : "Start"}
       </button>
     </div>
   );

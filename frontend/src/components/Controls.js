@@ -6,11 +6,18 @@ const Controls = ({ recording, onStart, onStop, onEnd }) => {
     <div className="controls flex justify-center gap-4 mt-4">
       <button
         onClick={recording ? onStop : onStart}
-        className={`py-2 px-4 rounded-full text-white flex items-center justify-center ${recording ? 'bg-black hover:bg-gray-700' : 'bg-black hover:bg-gray-700'}`}
+        className={`p-3 rounded-full text-white flex items-center justify-center ${
+          recording
+            ? "bg-black hover:bg-[var(--secondary-color)]"
+            : "bg-black hover:bg-[var(--secondary-color)]"
+        }`}
       >
         {recording ? <MicOff /> : <Mic />}
       </button>
-      <button onClick={onEnd} className="py-2 px-4 rounded-full bg-black hover:bg-gray-700 text-white flex items-center justify-center">
+      <button
+        onClick={onEnd}
+        className="p-3 rounded-full bg-black hover:bg-[var(--secondary-color)] text-white flex items-center justify-center"
+      >
         <CallEnd />
       </button>
     </div>

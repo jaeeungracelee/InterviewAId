@@ -17,7 +17,7 @@ export default function FeedbackPage() {
     <div className="feedback-background w-full h-screen">
       <div className="flex flex-col gap-6 p-10 h-screen w-3/5">
         <h1 className="text-3xl font-semibold text-[var(--primary-color)]">
-          Results from your interview
+          Great job on finishing your interview!
         </h1>
         <div className="border-2 border-[var(--secondary-color)] p-6 rounded-2xl">
           <div className="text-lg mb-1 text-[var(--primary-color)]">
@@ -34,7 +34,7 @@ export default function FeedbackPage() {
         <div className="flex flex-row gap-2 items-center">
           <Link
             href="/questions"
-            className="font-semibold rounded-xl pl-6 pr-4 py-3 bg-[var(--primary-color)] w-fit flex flex-row gap-[6px] items-center justify-center text-black"
+            className="btn"
           >
             Take Another Interview
             <ArrowForwardIcon sx={{ color: "black", fontSize: 24 }} />

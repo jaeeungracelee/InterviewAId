@@ -5,35 +5,45 @@ import { useRouter } from "next/navigation";
 import SearchIcon from "@mui/icons-material/Search";
 import RightArrow from "@mui/icons-material/ArrowForward";
 
-export default function SearchBar() {
+export default function SearchBar({ submitAnswer }) {
   const router = useRouter();
   const [value, setValue] = useState("");
+  const textAreaRef = useRef(null);
+  useEffect(() => {
+    if (textAreaRef) {
+      textAreaRef.current.style.height = "0px";
+      const scrollHeight = textAreaRef.current.scrollHeight;
+      textAreaRef.current.style.height = scrollHeight + "px";
+    }
+  }, [textAreaRef, value]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      router.push(`/questions?search=${value}`);
+      submitAnswer(value);
+      setValue("");
     }
   };
 
   return (
-    <div className="mt-4 max-w-[700px] flex flex-col relative justify-center items-center">
+    <div className="w-[700px] flex flex-col relative justify-center items-center">
       <SearchIcon color="disabled" className="absolute left-4" />
       <textarea
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Enter your meeting link..."
-        rows={1}
         onKeyDown={handleKeyDown}
-        className="search-bar w-full max-h-[50vh] border-[3px] border-[var(--primary-color)] px-12 py-3 rounded-full text-black"
+        ref={textAreaRef}
+        rows={1}
+        className="search-bar w-full max-h-[50vh] border-[3px] border-[var(--primary-color)] px-12 py-3 rounded-[24px] text-black disabled:bg-[var(--primary-bg)] disabled:cursor-not-allowed"
       />
-      <Link
+      <button
         className="bg-[var(--primary-color)] text-white py-1 px-1 rounded-full absolute right-2"
-        href={`/questions?search=${value}`}
+        onClick={() => submitAnswer(value)}
       >
         <RightArrow />
-      </Link>
+      </button>
     </div>
   );
 }

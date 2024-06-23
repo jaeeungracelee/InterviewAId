@@ -181,7 +181,6 @@ async def create_chat_completion(request: Request):
     response = conversation.predict(human_input={message})
     return {"content": response}
 
-
 @sio.event
 async def connect(sid, environ):
     print(f"Client connected: {sid}")

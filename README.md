@@ -1,3 +1,5 @@
+![InterviewAId](InterviewAId.gif)
+
 ## Inspiration 🌟
 
 In today's competitive job market, technical interviews play a crucial role in securing tech roles. However, many candidates struggle with effective preparation. While numerous coding problems and mock interview resources are available online, they often lack the interactive and dynamic nature of real interviews. Candidates miss out on nuanced feedback, conversational flow, and real-time adjustments that come with an experienced interviewer. This gap leaves many feeling unprepared and uncertain about their performance in actual interviews. We wanted to bridge this gap and provide a more interactive and realistic preparation tool.

@@ -12,3 +12,5 @@ boto3
 langchain
 langchain_groq
 hume
+pydub
+simpleaudio

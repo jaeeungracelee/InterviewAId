@@ -3,6 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 // import { javascript } from '@codemirror/lang-javascript';
 
 const CodeEditor = ({ onSubmit, code, setCode }) => {
+  const [loading, setLoading] = useState(false);
+
   return (
     <div className="code-editor flex flex-col w-full h-full bg-black rounded-lg shadow-lg p-4">
       <CodeMirror
@@ -13,10 +15,14 @@ const CodeEditor = ({ onSubmit, code, setCode }) => {
         className="flex-1 rounded-lg"
       />
       <button
-        onClick={onSubmit}
+        onClick={() => {
+          setLoading(true);
+          onSubmit();
+          setTimeout(() => setLoading(false), 1200);
+        }}
         className="mt-2 bg-[var(--primary-color)] text-black py-2 px-4 rounded-lg"
       >
-        Submit Code
+        {loading ? "Loading..." : "Submit Code"}
       </button>
     </div>
   );

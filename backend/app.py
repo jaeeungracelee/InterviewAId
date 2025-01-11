@@ -7,9 +7,14 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from io import BytesIO
+from pydub import AudioSegment
+import simpleaudio as sa
 import whisper
 from datetime import datetime
 from model.prompt import prompt
+import wave, struct
+from playsound import playsound
+import pathlib
 
 from langchain.chains import ConversationChain, LLMChain
 from langchain_core.prompts import (
@@ -21,6 +26,7 @@ from langchain_core.messages import SystemMessage
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
+from lmnt.api import Speech
 
 import tempfile
 import boto3
@@ -28,9 +34,15 @@ from hume import HumeBatchClient, BatchJob
 from hume.models.config import FaceConfig
 from queue import Queue
 from starlette.websockets import WebSocketDisconnect, WebSocketState
+from ipex_llm.transformers import AutoModelForSpeechSeq2Seq
+from transformers import WhisperProcessor
+
+import datasets
+import torch
 
 top_level_dict = {}
 top_level_queue = Queue()
+emotions_dict = {}
 
 load_dotenv()
 
@@ -48,9 +60,23 @@ sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 app_sio = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="/socket.io")
 
 whisper_model = whisper.load_model("base.en")
+model_path = "openai/whisper-base.en"
+
+whisper_model = AutoModelForSpeechSeq2Seq.from_pretrained(model_path,
+                                                    load_in_4bit=True,
+                                                    optimize_model=False,
+                                                    use_cache=True)
+whisper_model.to('cpu')
+whisper_model.config.forced_decoder_ids = None
+
+# Load Whisper processor
+processor = WhisperProcessor.from_pretrained(model_path)
+forced_decoder_ids = processor.get_decoder_prompt_ids(language="english", task="transcribe")
+
 
 # Groq model
 context = {}
+cur_speech = ""
 model = "llama3-8b-8192"
 client = ChatGroq(api_key=os.environ.get("GROQ_API_KEY"), model_name=model)
 conversational_memory_length = 5
@@ -84,7 +110,7 @@ async def websocket_endpoint(websocket: WebSocket):
             s3_client.upload_file(temp_webm_path, bucket_name, s3_file_key)
             s3_url = f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{s3_file_key}"
 
-            print(f"File uploaded to S3: {s3_url}")
+            # print(f"File uploaded to S3: {s3_url}")
 
             client = HumeBatchClient(os.getenv("HUME_API_KEY"))
             config = FaceConfig()
@@ -119,44 +145,56 @@ async def feedback(request: Request):
     return {"message": "Feedback received"}
 
 
-@app.get("/text-to-speech/")
+@app.post("/text-to-speech/")
 async def text_to_speech(request: Request):
     data = await request.json()
     text = data.get("text")
 
-    url = "https://api.lmnt.com/v1/ai/speech"
-    querystring = {
-        "X-API-Key": os.environ.get("LMNT_API_KEY"),
-        "voice": "curtis",
-        "text": text,
-    }
+    # url = "https://api.lmnt.com/v1/ai/speech"
+    # querystring = {
+    #     "X-API-Key": os.environ.get("LMNT_API_KEY"),
+    #     "voice": "curtis",
+    #     "text": text,
+    # }
 
-    response = requests.request("GET", url, params=querystring)
-    audio_data = response.content
-    audio_stream = BytesIO(audio_data)
+    # response = requests.request("GET", url, params=querystring)
+    # audio_data = response.content
+    # audio_stream = BytesIO(audio_data)
+    # audio = AudioSegment.from_file(audio_stream, format="wav")
 
-    return StreamingResponse(audio_stream, media_type="audio/wav")
+    # raw_audio_data = audio.raw_data
+
+    print(text)
+    async with Speech(os.environ.get("LMNT_API_KEY")) as speech:
+        synthesis = await speech.synthesize(text, "lily")
+    current_path = pathlib.Path(__file__).parent.resolve()
+    path = pathlib.Path(current_path, "test.mp3")
+    with open(path, "wb") as f:
+        f.write(synthesis["audio"])
+    
+    playsound(str(path))
+
+    # play_obj = sa.play_buffer(
+    #     raw_audio_data,
+    #     num_channels=audio.channels,
+    #     bytes_per_sample=audio.sample_width,
+    #     sample_rate=audio.frame_rate,
+    # )
+
+    # play_obj.wait_done()
+
+    return {"message": "success"}
 
 
 @app.post("/groq/")
 async def create_chat_completion(request: Request):
     data = await request.json()
     message = data.get("voice") + " " + data.get("code")
-    pre_prompt = (
-        f"Name: {context['name']}\n"
-        f"Company: {context['company']}\n"
-        f"Job Title: {context['role']}\n"
-        f"Job Description: {context['description']}\n\n"
-    )
+    if (data.get("extra")):
+        message = cur_speech + message
+    pre_prompt = ""
     final_prompt = pre_prompt + "\n" + prompt
 
-    # messages = [{"role": "user", "content": final_prompt}]
-
-    # chat_completion = client.chat.completions.create(
-    #     messages=messages,
-    #     model="llama3-70b-8192"
-    # )
-    # return {"content": chat_completion.choices[0].message.content}
     chat_prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(content=final_prompt),
@@ -175,6 +213,19 @@ async def create_chat_completion(request: Request):
     response = conversation.predict(human_input=message)
     return {"content": response}
 
+@app.get("/top-emotions/")
+async def top_emotions(client_id: str):
+    if client_id in emotions_dict:
+        emotions = emotions_dict[client_id]
+        sorted_emotions = sorted(
+            emotions.items(), key=lambda item: item[1], reverse=True
+        )
+        top_3_emotions = sorted_emotions[:3]
+        return {"results": top_3_emotions}
+    else:
+        return {"results": ["nervous", "happy", "anxious"]}
+
+
 @sio.event
 async def connect(sid, environ):
     print(f"Client connected: {sid}")
@@ -191,26 +242,39 @@ async def voice_message(sid, data):
         top_level_dict[sid] = {}
     if data == "stop":
         print("------ STOP ------")
-        print(top_level_dict[sid]["current_line"])
+        global cur_speech
+        cur_speech = top_level_dict[sid]["current_line"]
         return
 
     # Decode base64 data and transcribe
     audio_data = data.split(",")[1]
     audio_bytes = base64.b64decode(audio_data)
 
-    filepath = "./audio.ogg"
+    filepath = "audio.ogg"
 
     with open(filepath, "wb") as f:
         f.write(audio_bytes)
 
-    result = whisper_model.transcribe(filepath)
+    os.system("ffmpeg -y -i audio.ogg -ar 16000 audio.wav")
+
+    audio_dataset = datasets.Dataset.from_dict({"audio": ["./audio.wav"]}).cast_column("audio", datasets.Audio())
+    with torch.inference_mode():
+        sample = audio_dataset[0]["audio"]
+        input_features = processor(sample["array"],
+                                   sampling_rate=sample["sampling_rate"],
+                                   return_tensors="pt").input_features.to('cpu')
+        predicted_ids = whisper_model.generate(input_features,
+                                       forced_decoder_ids=forced_decoder_ids)
+        result = processor.batch_decode(predicted_ids, skip_special_tokens=True)
+
+    # result = whisper_model.transcribe(str(filepath))
 
     if "current_line" not in top_level_dict[sid]:
         top_level_dict[sid]["current_line"] = ""
-    top_level_dict[sid]["current_line"] += result["text"]
+    top_level_dict[sid]["current_line"] += result[0]
 
-    print("Transcription: ", result["text"])
-    await sio.emit("voice_response", result["text"], room=sid)
+    print("Transcription: ", result[0])
+    await sio.emit("voice_response", result[0], room=sid)
 
 async def text_runner():
     return
